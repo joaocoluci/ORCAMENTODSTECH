@@ -1,0 +1,105 @@
+{
+  "titulo": "Orçamento de Horas",
+  "subtitulo": "Nome da Demanda",
+  "rodape": "Sankhya · ID DSTech 0000 · Orçamento — Nome da Demanda",
+  "identificacao": [
+    ["Cliente", "_______________________"],
+    ["ID DSTech", "0000"],
+    ["Data", "01/01/2026"],
+    ["Responsável", "João Coluci"]
+  ],
+  "resumo": {
+    "titulo": "1. Resumo do que será desenvolvido",
+    "intro": "Descrição curta e funcional do que será entregue, em linguagem acessível.",
+    "rotinas": [
+      ["Escopo 1 — Título", "Descrição funcional da primeira rotina, sem jargão técnico."],
+      ["Escopo 2 — Título", "Descrição funcional da segunda rotina."]
+    ]
+  },
+  "escopos": [
+    {
+      "nome": "2. Escopo 1 — Título",
+      "intro": "Contexto de entrada e premissa principal do escopo.",
+      "tituloDesenv": "2.1 Desenvolvimento",
+      "desenvolvimento": [
+        { "item": "a) Item de desenvolvimento", "horas": "16h", "subs": [
+          "Subitem descritivo em linguagem funcional",
+          "Outro subitem"
+        ] },
+        { "item": "b) Outro item", "horas": "24h", "subs": [
+          "Subitem",
+          "Subitem"
+        ] }
+      ],
+      "subtotalDevLabel": "Subtotal Desenvolvimento — Escopo 1",
+      "subtotalDev": "40h",
+      "tituloFases": "2.2 Demais fases — Escopo 1",
+      "fases": [
+        ["Alinhamento / definições", "8h"],
+        ["Homologação", "8h"],
+        ["Documentação", "4h"]
+      ],
+      "totalLabel": "Total Escopo 1:",
+      "total": "60h"
+    },
+    {
+      "nome": "3. Escopo 2 — Título",
+      "intro": "Contexto de entrada do segundo escopo.",
+      "tituloDesenv": "3.1 Desenvolvimento",
+      "desenvolvimento": [
+        { "item": "a) Item de desenvolvimento", "horas": "20h", "subs": [
+          "Subitem",
+          "Subitem"
+        ] }
+      ],
+      "subtotalDevLabel": "Subtotal Desenvolvimento — Escopo 2",
+      "subtotalDev": "20h",
+      "tituloFases": "3.2 Demais fases — Escopo 2",
+      "fases": [
+        ["Alinhamento / definições", "4h"],
+        ["Homologação", "4h"],
+        ["Documentação", "4h"]
+      ],
+      "totalLabel": "Total Escopo 2:",
+      "total": "32h"
+    }
+  ],
+  "consolidado": {
+    "titulo": "4. Resumo consolidado",
+    "colunas": ["Fase", "Escopo 1", "Escopo 2"],
+    "linhas": [
+      ["Alinhamento / definições", "8h", "4h"],
+      ["Desenvolvimento", "40h", "20h"],
+      ["Homologação", "8h", "4h"],
+      ["Documentação", "4h", "4h"],
+      ["Total por escopo", "60h", "32h"]
+    ],
+    "totalRowIndex": 4,
+    "totalGeral": "Total geral: 92 horas"
+  },
+  "pontosDefinir": {
+    "titulo": "5. Pontos a definir com o cliente antes do início",
+    "grupos": [
+      { "nome": "Escopo 1:", "itens": [
+        "Ponto pendente 1.",
+        "Ponto pendente 2."
+      ] },
+      { "nome": "Escopo 2:", "itens": [
+        "Ponto pendente 1."
+      ] }
+    ]
+  },
+  "escopoNegativo": {
+    "titulo": "6. Escopo negativo (não contemplado)",
+    "itens": [
+      { "bold": "Item não contemplado. ", "texto": "Complemento explicando a exclusão." }
+    ]
+  },
+  "premissas": {
+    "titulo": "7. Premissas",
+    "itens": [
+      "Premissa 1.",
+      "Premissa 2."
+    ]
+  }
+}
