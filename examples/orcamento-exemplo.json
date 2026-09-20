@@ -1,102 +1,168 @@
+/** @author João Coluci **/
 {
-  "titulo": "Orçamento de Horas",
+  "titulo": "Detalhamento do Orçamento de Horas",
   "subtitulo": "Nome da Demanda",
-  "rodape": "Sankhya · ID DSTech 0000 · Orçamento — Nome da Demanda",
+  "cabecalho": {
+    "elaborador": "João Coluci",
+    "versao": "1.0",
+    "aprovador": "Plinio Silva"
+  },
   "identificacao": [
-    ["Cliente", "_______________________"],
-    ["ID DSTech", "0000"],
-    ["Data", "01/01/2026"],
-    ["Responsável", "João Coluci"]
+    [
+      "Cliente",
+      "_______________________"
+    ],
+    [
+      "ID DSTech",
+      "0000"
+    ],
+    [
+      "Data",
+      "01/01/2026"
+    ],
+    [
+      "Consultor Funcional",
+      "Nome do Autor do Escopo"
+    ],
+    [
+      "Orçamento Realizado por",
+      "João Coluci"
+    ]
   ],
   "resumo": {
     "titulo": "1. Resumo do que será desenvolvido",
     "intro": "Descrição curta e funcional do que será entregue, em linguagem acessível.",
     "rotinas": [
-      ["Escopo 1 — Título", "Descrição funcional da primeira rotina, sem jargão técnico."],
-      ["Escopo 2 — Título", "Descrição funcional da segunda rotina."]
+      [
+        "Assunto A — Título do escopo",
+        "Descrição funcional do primeiro assunto, sem jargão técnico."
+      ],
+      [
+        "Assunto B — Título do escopo",
+        "Descrição funcional do segundo assunto."
+      ]
     ]
   },
   "escopos": [
     {
-      "nome": "2. Escopo 1 — Título",
-      "intro": "Contexto de entrada e premissa principal do escopo.",
+      "nome": "2. Escopo do desenvolvimento",
+      "intro": "Contexto de entrada e premissa principal da demanda.",
       "tituloDesenv": "2.1 Desenvolvimento",
       "desenvolvimento": [
-        { "item": "a) Item de desenvolvimento", "horas": "16h", "subs": [
-          "Subitem descritivo em linguagem funcional",
-          "Outro subitem"
-        ] },
-        { "item": "b) Outro item", "horas": "24h", "subs": [
-          "Subitem",
-          "Subitem"
-        ] }
+        {
+          "grupo": "Assunto A — Título do escopo",
+          "subtotal": "40h"
+        },
+        {
+          "item": "a) Item de desenvolvimento",
+          "horas": "16h",
+          "subs": [
+            "Subitem descritivo em linguagem funcional",
+            "Outro subitem"
+          ]
+        },
+        {
+          "item": "b) Outro item",
+          "horas": "24h",
+          "subs": [
+            "Subitem",
+            "Subitem"
+          ]
+        },
+        {
+          "grupo": "Assunto B — Título do escopo",
+          "subtotal": "20h"
+        },
+        {
+          "item": "a) Item de desenvolvimento",
+          "horas": "20h",
+          "subs": [
+            "Subitem",
+            "Subitem"
+          ]
+        }
       ],
-      "subtotalDevLabel": "Subtotal Desenvolvimento — Escopo 1",
-      "subtotalDev": "40h",
-      "tituloFases": "2.2 Demais fases — Escopo 1",
+      "subtotalDevLabel": "Subtotal Desenvolvimento",
+      "subtotalDev": "60h",
+      "tituloFases": "2.2 Demais fases",
       "fases": [
-        ["Alinhamento / definições", "8h"],
-        ["Homologação", "8h"],
-        ["Documentação", "4h"]
+        [
+          "Alinhamento / definições",
+          "12h"
+        ],
+        [
+          "Homologação",
+          "12h"
+        ],
+        [
+          "Documentação",
+          "4h"
+        ]
       ],
-      "totalLabel": "Total Escopo 1:",
-      "total": "60h"
-    },
-    {
-      "nome": "3. Escopo 2 — Título",
-      "intro": "Contexto de entrada do segundo escopo.",
-      "tituloDesenv": "3.1 Desenvolvimento",
-      "desenvolvimento": [
-        { "item": "a) Item de desenvolvimento", "horas": "20h", "subs": [
-          "Subitem",
-          "Subitem"
-        ] }
-      ],
-      "subtotalDevLabel": "Subtotal Desenvolvimento — Escopo 2",
-      "subtotalDev": "20h",
-      "tituloFases": "3.2 Demais fases — Escopo 2",
-      "fases": [
-        ["Alinhamento / definições", "4h"],
-        ["Homologação", "4h"],
-        ["Documentação", "4h"]
-      ],
-      "totalLabel": "Total Escopo 2:",
-      "total": "32h"
+      "totalLabel": "Total do orçamento:",
+      "total": "88h"
     }
   ],
   "consolidado": {
-    "titulo": "4. Resumo consolidado",
-    "colunas": ["Fase", "Escopo 1", "Escopo 2"],
+    "titulo": "3. Resumo consolidado",
+    "colunas": [
+      "Fase",
+      "Horas"
+    ],
     "linhas": [
-      ["Alinhamento / definições", "8h", "4h"],
-      ["Desenvolvimento", "40h", "20h"],
-      ["Homologação", "8h", "4h"],
-      ["Documentação", "4h", "4h"],
-      ["Total por escopo", "60h", "32h"]
+      [
+        "Alinhamento / definições",
+        "12h"
+      ],
+      [
+        "Desenvolvimento",
+        "60h"
+      ],
+      [
+        "Homologação",
+        "12h"
+      ],
+      [
+        "Documentação",
+        "4h"
+      ],
+      [
+        "Total",
+        "88h"
+      ]
     ],
     "totalRowIndex": 4,
-    "totalGeral": "Total geral: 92 horas"
+    "totalGeral": "Total geral: 88 horas"
   },
   "pontosDefinir": {
-    "titulo": "5. Pontos a definir com o cliente antes do início",
+    "titulo": "4. Pontos a definir com o cliente antes do início",
     "grupos": [
-      { "nome": "Escopo 1:", "itens": [
-        "Ponto pendente 1.",
-        "Ponto pendente 2."
-      ] },
-      { "nome": "Escopo 2:", "itens": [
-        "Ponto pendente 1."
-      ] }
+      {
+        "nome": "Assunto A — Título do escopo:",
+        "itens": [
+          "Ponto pendente 1.",
+          "Ponto pendente 2."
+        ]
+      },
+      {
+        "nome": "Assunto B — Título do escopo:",
+        "itens": [
+          "Ponto pendente 1."
+        ]
+      }
     ]
   },
   "escopoNegativo": {
-    "titulo": "6. Escopo negativo (não contemplado)",
+    "titulo": "5. Escopo negativo (não contemplado)",
     "itens": [
-      { "bold": "Item não contemplado. ", "texto": "Complemento explicando a exclusão." }
+      {
+        "bold": "Assunto A — item não contemplado. ",
+        "texto": "Complemento explicando a exclusão e, em caso de inviabilidade técnica, o motivo."
+      }
     ]
   },
   "premissas": {
-    "titulo": "7. Premissas",
+    "titulo": "6. Premissas",
     "itens": [
       "Premissa 1.",
       "Premissa 2."
