@@ -1,101 +1,96 @@
 /** @author João Coluci **/
-# Padrão visual do documento
+# Padrão visual do documento (modelo DSTECH v.4)
 
-Duas fontes, ambas obrigatórias:
+Fonte única de verdade:
 
-- **Cores e tipografia** — Brandbook Sankhya 2023 (`02. BRANDBOOK SANKHYA 2023 SIMPLIFICADO.pdf`,
-  Guia visual de comunicação v3.0, e `CORES SANKHYA.txt`), em
-  `G:\Drives compartilhados\Sankhya Marketing\01. GUIDES\`.
-- **Cabeçalho, rodapé, margens** — `DSTECH - Modelo de Evidências de Entrega de Customização v.3.docx`,
-  em `G:\Drives compartilhados\Delivery Service - Tech\6. GESTAO\DSTECH 2.0\Novos Modelos de Documento\`.
+- **`Modelo de Documento Padrão Sankhya 2026.docx`** — identidade visual da apresentação padrão
+  Sankhya 2026 (capa, tipografia, cores, tabelas, caixas de destaque, contracapa).
+- **Modelos DSTECH v.4** — `DSTECH - Modelo de Definição de Escopo de Customização v.4.docx` e
+  `DSTECH - Modelo de Evidências de Entrega de Customização v.4.docx`, montados sobre o 2026 com o
+  cabeçalho DSTECH (versão 4.0, publicação 30/09/2026).
+
+Todos em `G:\Drives compartilhados\Delivery Service - Tech\A. ESTRUTURA SITE\1. MODELO DE DOCUMENTOS\`.
 
 ## Cores
 
-Paleta do brandbook. Nada fora dela.
+Paleta do modelo 2026. Nada fora dela.
 
-| Cor de marca | Hex | Uso no DOCX | Const no gerador |
+| Cor | Hex | Uso no DOCX | Const no gerador |
 |---|---|---|---|
-| Verde | `#66CC66` | **só filete e barra lateral** — nunca texto | `GREEN` |
-| Petróleo | `#2E3C50` | título, subtítulo, H1, H2, horas, totais, fundo do cabeçalho de tabela | `NAVY` |
-| Cinza claro | `#EDEDED` | zebra das tabelas, caixa de observação, caixa de total geral | `ZEBRA` |
-| Cinza escuro | `#808285` | bordas de célula | `GREY` |
-| — | `#666666` | rótulos do cabeçalho e paginação (valor herdado do modelo DSTECH) | `LABEL` |
-| — | `#000000` | corpo de texto (igual ao modelo DSTECH) | `TEXT` |
+| Navy 700 | `#212F41` | texto, títulos, horas, totais, fundo do cabeçalho de tabela | `NAVY` / `TEXT` |
+| Slate | `#343C50` | H3 e texto das caixas de destaque | `SLATE` |
+| Verde Sankhya | `#00D666` | filete do rodapé e do cabeçalho, barra das caixas, rótulos da capa | `GREEN` |
+| Verde apoio | `#00CD5E` | rótulos em caixa alta (cabeçalho, caixas), marcadores de lista | `GREEN_APOIO` |
+| Cinza claro | `#F3F3F3` | zebra, caixas de destaque, célula de rótulo do cabeçalho | `ZEBRA` |
+| Borda | `#BFBFBF` | filete horizontal entre linhas de tabela (sem bordas verticais) | `BORDA` |
+| Cinza | `#888888` | legendas, rodapé, texto-guia dos modelos | `LABEL` |
 
-### Por que o verde não vira texto
+### Por que o verde não vira texto corrido
 
-`#66CC66` sobre branco dá contraste ~2,2:1. Reprova WCAG AA (mínimo 4,5:1) e some quando o
-cliente imprime em preto e branco. Ele entra só como filete sob o subtítulo e barra lateral
-das caixas de destaque. Onde antes havia azul (`#0EA5E9`, cor do site, fora do brandbook),
-agora é petróleo — a hierarquia vem do tamanho, não de uma segunda cor. É o que o modelo
-DSTECH faz: Heading1 e Heading2 usam o mesmo `#2E3C50`.
+`#00D666` sobre branco dá contraste ~1,9:1. Reprova WCAG AA e some na impressão P&B. Sobre
+fundo claro ele aparece só como filete, barra e rótulo curto em caixa alta (verde apoio); como
+texto, só na capa e na contracapa, sobre o fundo escuro.
 
 ## Tipografia
 
-O brandbook pede **Work Sans** (títulos) e **Roboto** (corpo). O DOCX usa **Arial**.
+**Work Sans**, embutida no DOCX (`assets/fontes/*.ttf`, passadas em `fonts` do `Document`). Sem
+a incorporação o Word troca a fonte em máquina sem Work Sans e as quebras de linha deslocam.
 
-Motivo: nenhuma das duas é fonte padrão do Windows/Office. O orçamento vai para o cliente, e
-em máquina sem a fonte o Word substitui por métrica diferente sem avisar — as quebras de linha
-deslocam. O próprio modelo DSTECH v.3 resolve assim: embute Roboto para os textos legados, mas
-o `docDefaults` do arquivo é Arial. O padrão Sankhya entra pela paleta.
+O padrão 2026 não usa negrito sintético: ênfase é a família **Work Sans SemiBold**. No gerador,
+`t(texto, { bold: true })` já troca a fonte — não passar `bold` direto para `TextRun`.
 
-Escala em uso (half-points do docx-js):
-
-| Elemento | size | Peso | Cor |
+| Elemento | size (half-points) | Fonte | Cor |
 |---|---|---|---|
-| Título | 40 (20pt) | bold | `NAVY` |
-| Subtítulo | 26 (13pt) | bold | `NAVY` + filete verde |
-| H1 | 28 (14pt) | bold | `NAVY` |
-| H2 | 24 (12pt) | bold | `NAVY` |
-| Corpo | 22 (11pt) | regular | `TEXT` |
-| Horas do item | 22 (11pt) | bold | `NAVY` |
-| Total do escopo | 26 (13pt) | bold | `NAVY` |
-| Total geral | 28 (14pt) | bold | `NAVY` |
-| Cabeçalho — área | 20 (10pt) | bold | `NAVY` |
-| Cabeçalho — rótulos e valores | 16 (8pt) | regular | `LABEL` |
-| Paginação | 16 (8pt) | regular | `LABEL` |
+| Capa — título (2 linhas) | 48 | Work Sans Light, caixa alta | `GREEN` |
+| Capa — nome da demanda | 48 | SemiBold, caixa alta | branco |
+| H1 | 34 | SemiBold, caixa alta | `NAVY` |
+| H2 | 25 | SemiBold | `NAVY` |
+| H3 | 21 | SemiBold | `SLATE` |
+| Corpo | 21 | Work Sans | `NAVY` |
+| Tabela | 18 | Work Sans (cabeçalho SemiBold branco em caixa alta) | `NAVY` |
+| Cabeçalho — rótulos | 13 | SemiBold, caixa alta | `GREEN_APOIO` |
+| Cabeçalho — valores | 15 | Work Sans | `NAVY` |
+| Rodapé | 14 | Work Sans | `LABEL` |
 
-## Página (modelo DSTECH v.3)
+## Página
 
-A4 (11906 × 16838 twips). Margens: topo e base 1417, laterais 1700, `header` 0, `footer` 720.
-Largura útil **8506 twips** — era 9026 no layout anterior; toda largura de coluna foi refeita.
+A4 (11906 × 16838 twips). Três seções:
 
-`titlePage: true` — a primeira página tem cabeçalho e rodapé próprios.
+| Seção | Margens (topo / laterais / base) | Cabeçalho / rodapé |
+|---|---|---|
+| Capa | 6200 / 1304 / 1300 | vazios; fundo `capa-2026.jpg` sangrando a página |
+| Corpo | 2350 / 1304 / 1300 (`header` 500, `footer` 560) | tabela DSTECH / filete verde + paginação |
+| Contracapa | 6600 / 1304 / 1300 | vazios; fundo `contracapa-2026.jpg` + `logo-sankhya-branco.png` |
 
-## Cabeçalho e rodapé
+Largura útil **9298 twips** (era 8506 na v.3). Larguras de coluna herdadas da v.3 passam por
+`escala()`; `quadros[].larguras` do JSON também — o JSON pode continuar somando 8506.
 
-As quatro faixas gráficas são as imagens do modelo, copiadas para `assets/`. Todas são
-flutuantes, atrás do texto, ancoradas na coluna, e sangram para fora da margem esquerda
-(offsets em EMU iguais aos do arquivo original — não recalcular "para arredondar").
+## Capa
 
-| Posição | Arquivo | Origem no modelo | Extensão (EMU) | Offset x, y (EMU) |
-|---|---|---|---|---|
-| Cabeçalho da 1ª página | `cabecalho-capa.png` | `image4.png` | 7581900 × 1185863 | −1079998, 1 |
-| Cabeçalho das demais | `cabecalho-padrao.png` | `image5.png` | 7479882 × 414338 | −1076322, 1 |
-| Rodapé da 1ª página | `rodape-capa.png` | `image2.png` | 7581900 × 855931 | −1076322, −126760 |
-| Rodapé das demais | `rodape-padrao.png` | `image1.png` | 7572375 × 658544 | −1076322, 1 |
+Título em duas linhas finas verdes, nome da demanda (`subtitulo`) em branco, e a faixa de campos
+com filete verde: **Cliente** (identificação), **Versão** (`cabecalho.versao` — versão do
+documento), **Data** (`Data` ou `Data da análise`), **Responsável** (`Orçamento Realizado por`,
+`Analista` ou `cabecalho.elaborador`).
 
-`logo-sankhya.png` (`image3.png`, 59 × 34 px) vai na primeira célula da tabela de cabeçalho.
-
-**Cabeçalho das páginas 2+**: faixa fina, três parágrafos vazios de 10pt para empurrar o
-conteúdo abaixo dela, e a tabela de 4 colunas (1530 / 3810 / 1335 / 1815 dxa, bordas pontilhadas
-pretas, margens de célula 100):
+## Cabeçalho do corpo (tabela DSTECH v.4)
 
 ```
-[logo Sankhya] | Delivery Service Tech (bold, NAVY, 10pt, centralizado, 3 colunas)
-Elaborador     | <valor>  | Versão        | <valor>
-Aprovador      | <valor>  | Data Revisão  | <valor>
+[logo Sankhya]                                 DELIVERY SERVICE TECH
+ELABORADOR  | <cabecalho.elaborador> | VERSÃO     | 4.0
+APROVADOR   | <cabecalho.aprovador>  | PUBLICAÇÃO | 30/09/2026
 ```
 
-Os valores vêm do bloco `cabecalho` do JSON. Essa tabela descreve o **documento**; a tabela de
-identificação do corpo descreve a **demanda** (ID DSTech, cliente, consultor). São coisas
-diferentes — não fundir.
+Colunas 1900 / 3200 / 1700 / resto; rótulo com fundo `ZEBRA`. **Versão e publicação são do
+layout** (constantes `VERSAO_LAYOUT` e `DATA_PUBLICACAO_LAYOUT`), iguais em todo documento
+gerado — nunca a versão ou a data do orçamento. A versão do documento vai na capa.
 
-**Rodapé da 1ª página**: só a faixa, sem paginação. **Demais páginas**: número da página
-alinhado à direita, 8pt `#666666`, sobre a faixa.
+## Rodapé do corpo
+
+Filete verde no topo; `SANKHYA | Documento de uso interno e do cliente` à esquerda e
+`PÁGINA X DE Y` à direita (tabulação em `CW`).
 
 ## Armadilha do gerador
 
-`ImageRun` exige `type: "png"`. Sem isso o docx-js grava a mídia como `.undefined`, o
-`[Content_Types].xml` fica sem a extensão e o **Word abre com "arquivo corrompido"** — mesmo
-com o `validate.py` passando. O validador não pega esse caso.
+`ImageRun` exige `type` (`"png"` ou `"jpg"`). Sem isso o docx-js grava a mídia como
+`.undefined`, o `[Content_Types].xml` fica sem a extensão e o **Word abre com "arquivo
+corrompido"** — mesmo com o `validate.py` passando.

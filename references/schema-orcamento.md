@@ -8,10 +8,10 @@ Entrada do gerador `scripts/gerar-orcamento-docx.js`. Todos os campos são opcio
 
 | Campo | Tipo | Uso |
 |---|---|---|
-| `titulo` | string | Título grande (petróleo). Default e valor padronizado: **"Detalhamento do Orçamento de Horas"** — não trocar. |
-| `subtitulo` | string | Subtítulo (petróleo) com filete verde. Nome da demanda. |
+| `titulo` | string | Título da capa (duas linhas finas verdes). Default e valor padronizado: **"Detalhamento do Orçamento de Horas"** — não trocar. |
+| `subtitulo` | string | Nome da demanda, em destaque branco na capa. |
 | `cabecalho` | objeto | Tabela do cabeçalho das páginas 2+ (modelo DSTECH). Ver abaixo. |
-| `identificacao` | `[[campo, valor], ...]` | Tabela de identificação no corpo (2 colunas). Rótulos padrão: `Cliente`, `ID DSTech`, `Data`, `Consultor Funcional`, `Orçamento Realizado por`. `Consultor Funcional` = autor extraído do escopo lido; sem autor identificável, **omitir a linha**. `Orçamento Realizado por` é sempre `João Coluci` e obrigatório em todo documento. |
+| `identificacao` | `[[campo, valor], ...]` | Tabela de identificação no corpo (2 colunas). Rótulos padrão: `Cliente`, `ID DSTech`, `Data`, `Consultor Funcional`, `Orçamento Realizado por`. `Consultor Funcional` = autor extraído do escopo lido; sem autor identificável, **omitir a linha**. `Orçamento Realizado por` é sempre `João Coluci` e obrigatório em todo documento. `ID DSTech` e `Cliente` também alimentam a capa e o nome do arquivo (`ORCAMENTO - ID DSTECH <id> - <CLIENTE>.docx`, via `--output-dir`). |
 
 Não existe mais o campo `rodape`: o rodapé segue o modelo DSTECH — faixa gráfica e número da
 página, sem texto livre.
@@ -28,9 +28,10 @@ demanda — a identificação da demanda continua na tabela do corpo.
 | `versao` | `1.0` | Versão do documento. |
 | `aprovador` | `Plinio Silva` | Aprovador do documento. |
 
-"Data Revisão" não é campo do JSON: refere-se à revisão do **layout** do modelo DSTECH, fixa em
-`03/07/2026` (constante `DATA_REVISAO_LAYOUT` no gerador). Nunca usar a data do orçamento ali —
-se o JSON traz `dataRevisao`, o gerador ignora.
+Versão e publicação do cabeçalho não são campos do JSON: são do **layout** DSTECH v.4, fixas em
+`4.0` e `30/09/2026` (constantes `VERSAO_LAYOUT` e `DATA_PUBLICACAO_LAYOUT` no gerador). Nunca usar a
+data do orçamento ali — se o JSON traz `dataRevisao`, o gerador ignora. `versao` aparece na capa,
+como versão do documento.
 
 ## `resumo`
 - `titulo` (string), `intro` (string parágrafo), `rotinas`: `[[assunto, descrição], ...]` → tabela de 2 colunas. A 1ª coluna usa os **mesmos nomes dos grupos H3** do desenvolvimento, na mesma ordem.
@@ -45,7 +46,7 @@ se o JSON traz `dataRevisao`, o gerador ignora.
 - `nome`: título H1 (inicia em nova página). Ex.: "2. Escopo do desenvolvimento".
 - `intro`: parágrafo de contexto.
 - `tituloDesenv`: H2 (ex.: "2.1 Desenvolvimento").
-- `desenvolvimento`: lista de `{ item, horas, subs[] }`. `item` e `horas` em negrito petróleo na mesma linha; cada `sub` vira bullet.
+- `desenvolvimento`: lista de `{ item, horas, subs[] }`. `item` e `horas` em Work Sans SemiBold navy na mesma linha; cada `sub` vira bullet.
   - Entrada `{ grupo, subtotal }` (sem `item`/`horas`) vira um H3 que separa os itens por assunto, com o subtotal do grupo ao lado. **Obrigatória sempre que o documento de escopo lido traz classificação de assunto** — os títulos e a ordem são os mesmos do escopo, para o leitor localizar a tela, botão, dashboard, relatório ou rotina. Sem classificação no fonte, agrupar por tipo de artefato (Telas · Botões e ações · Rotinas e processos · Dashboards · Relatórios · Integrações). Reiniciar a letra dos itens (`a)`, `b)`, ...) a cada grupo, e repetir os mesmos títulos no `resumo.rotinas` e nos `pontosDefinir`.
 - `subtotalDevLabel` + `subtotalDev`: linha de subtotal (tabela 2 colunas, valor à direita). Rótulo sem número de escopo: `Subtotal Desenvolvimento`.
 - `tituloFases` + `fases`: H2 + tabela `[[fase, horas], ...]`. Aparece **uma vez** no documento: `Alinhamento / definições`, `Homologação`, `Documentação`. `Treinamento` e `Produção e acompanhamento` só entram quando solicitados; não pedidos, a linha não existe.

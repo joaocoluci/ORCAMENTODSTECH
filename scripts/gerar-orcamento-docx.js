@@ -1,7 +1,8 @@
 /** @author João Coluci **/
 /*
  * Gerador de Detalhamento do Orçamento de Horas em DOCX.
- * Layout: modelo DSTECH v.3 (cabeçalho/rodapé) + paleta do Brandbook Sankhya 2023.
+ * Layout: modelo DSTECH v.4 (capa, cabeçalho, rodapé e contracapa) sobre o
+ * Modelo de Documento Padrão Sankhya 2026.
  * Uso:
  *   NODE_PATH="$(npm root -g)" node gerar-orcamento-docx.js --content dados.json --output "Orcamento.docx"
  *
@@ -13,7 +14,7 @@ const path = require("path");
 const {
   Document, Packer, Paragraph, TextRun, ImageRun, Table, TableRow, TableCell,
   Header, Footer, AlignmentType, LevelFormat, HeadingLevel, BorderStyle,
-  WidthType, ShadingType, VerticalAlign, PageNumber,
+  WidthType, ShadingType, VerticalAlign, PageNumber, TabStopType,
   HorizontalPositionRelativeFrom, VerticalPositionRelativeFrom, TextWrappingType
 } = require("docx");
 
@@ -23,42 +24,77 @@ function arg(name, def) {
   return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : def;
 }
 const contentPath = arg("--content");
-const outputPath = arg("--output");
-if (!contentPath || !outputPath) {
-  console.error("Uso: node gerar-orcamento-docx.js --content dados.json --output saida.docx");
+const outputDir = arg("--output-dir");
+if (!contentPath || (!outputDir && !arg("--output"))) {
+  console.error("Uso: node gerar-orcamento-docx.js --content dados.json --output-dir pasta\n" +
+    "   ou: node gerar-orcamento-docx.js --content dados.json --output saida.docx");
   process.exit(1);
 }
 // tolera header de comentário injetado por hook/formatter no topo do JSON
 const raw = fs.readFileSync(contentPath, "utf8").replace(/^\s*\/\*[\s\S]*?\*\/\s*/, "");
 const d = JSON.parse(raw);
+const outputPath = outputDir ? path.join(outputDir, nomeArquivoPadrao()) : arg("--output");
+
+/** Nome padrão: "ORCAMENTO - ID DSTECH <id> - <CLIENTE>.docx", sem acento e sem caractere inválido no Windows. */
+function nomeArquivoPadrao() {
+  const valor = (rotulo) => {
+    const linha = (d.identificacao || []).find(r => String(r[0]).toLowerCase() === rotulo.toLowerCase());
+    return linha ? String(linha[1]).trim() : "";
+  };
+  const id = valor("ID DSTech");
+  const cliente = valor("Cliente");
+  if (!id || !cliente) {
+    console.error("--output-dir exige 'ID DSTech' e 'Cliente' preenchidos em identificacao.");
+    process.exit(1);
+  }
+  const limpar = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[<>:"/\\|?*]/g, "").replace(/\s+/g, " ").trim().toUpperCase();
+  return `ORCAMENTO - ID DSTECH ${limpar(id)} - ${limpar(cliente)}.docx`;
+}
 
 // ---------- paleta / medidas ----------
-// Cores do Brandbook Sankhya 2023 (references/design-sankhya.md).
-// O verde #66CC66 só aparece como preenchimento e filete: como texto tem contraste
-// 2,2:1 no branco, reprova WCAG AA e some na impressão.
-const NAVY = "2E3C50";   // petróleo — títulos, totais, fundo de cabeçalho de tabela
-const GREEN = "66CC66";  // verde — filete e barra lateral, nunca texto
-const ZEBRA = "EDEDED";  // cinza claro — linhas alternadas, caixas de destaque
-const GREY = "808285";   // cinza escuro — bordas de célula
-const LABEL = "666666";  // rótulos do cabeçalho e paginação (igual ao modelo DSTECH)
-const TEXT = "000000";   // corpo de texto
+// Modelo de Documento Padrão Sankhya 2026 (references/design-sankhya.md).
+// O verde #00D666 só aparece como filete, barra e texto sobre fundo escuro: no branco
+// tem contraste 1,9:1 e some na impressão.
+const NAVY = "212F41";        // navy 700 — texto, títulos, totais, cabeçalho de tabela
+const SLATE = "343C50";       // slate — H3 e texto de caixa de destaque
+const GREEN = "00D666";       // verde Sankhya — filetes, barras, destaques na capa
+const GREEN_APOIO = "00CD5E"; // verde apoio — rótulos e marcadores sobre fundo claro
+const ZEBRA = "F3F3F3";       // cinza claro — linhas alternadas, caixas de destaque
+const BORDA = "BFBFBF";       // filete horizontal entre linhas de tabela
+const LABEL = "888888";       // cinza — legendas, cabeçalho e rodapé
+const TEXT = NAVY;
+const FONTE = "Work Sans";
+const FONTE_FORTE = "Work Sans SemiBold"; // o padrão 2026 não usa negrito sintético
+const FONTE_FINA = "Work Sans Light";
 
-// Página: medidas do modelo DSTECH v.3 (margens 1417 topo/base, 1700 laterais).
+// Página: medidas do modelo DSTECH v.4 (laterais 1304; capa com o texto no terço inferior).
 const PAGE = { width: 11906, height: 16838 };
-const MARGIN = { top: 1417, bottom: 1417, left: 1700, right: 1700, header: 0, footer: 720 };
-const CW = PAGE.width - MARGIN.left - MARGIN.right; // 8506 — largura útil
+const MARGIN = { top: 2350, bottom: 1300, left: 1304, right: 1304, header: 500, footer: 560 };
+const MARGIN_CAPA = { ...MARGIN, top: 6200, header: 600 };
+const MARGIN_CONTRACAPA = { ...MARGIN, top: 6600, header: 600 };
+const CW = PAGE.width - MARGIN.left - MARGIN.right; // 9298 — largura útil
+// Larguras de tabela foram desenhadas para a largura útil da v.3 (8506) e escalam para a v.4.
+const CW_V3 = 8506;
+const escala = (w) => Math.round(w * CW / CW_V3);
 
-// Data da revisão do LAYOUT do documento (modelo DSTECH), não do orçamento.
-// Fixa: não acompanha a data da proposta.
-const DATA_REVISAO_LAYOUT = "03/07/2026";
+// Versão e publicação do LAYOUT (modelo DSTECH v.4), não do orçamento.
+// Fixas: não acompanham a versão nem a data da proposta.
+const VERSAO_LAYOUT = "4.0";
+const DATA_PUBLICACAO_LAYOUT = "30/09/2026";
 
-const border = { style: BorderStyle.SINGLE, size: 2, color: GREY };
-const borders = { top: border, bottom: border, left: border, right: border };
-const cellMargins = { top: 80, bottom: 80, left: 120, right: 120 };
+const filete = { style: BorderStyle.SINGLE, size: 4, color: BORDA };
+const semBorda = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
+const borders = { top: semBorda, bottom: filete, left: semBorda, right: semBorda };
+const cellMargins = { top: 100, bottom: 100, left: 140, right: 140 };
 const R = AlignmentType.RIGHT;
 const C = AlignmentType.CENTER;
 
-function t(text, opts = {}) { return new TextRun({ text: String(text), ...opts }); }
+// `bold` vira Work Sans SemiBold: a fonte embutida não tem peso negrito.
+function t(text, opts = {}) {
+  const { bold, ...resto } = opts;
+  return new TextRun({ text: String(text), ...(bold ? { font: FONTE_FORTE } : {}), ...resto });
+}
 function p(children, opts = {}) {
   return new Paragraph({ children: Array.isArray(children) ? children : [t(children)], ...opts });
 }
@@ -77,13 +113,14 @@ function linhaVazia() { return new Paragraph({ spacing: { before: 0, after: 0 },
 function cell(content, { w, fill, bold, align, header, span } = {}) {
   const runs = Array.isArray(content)
     ? content
-    : [t(content, { bold: bold || header, color: header ? "FFFFFF" : undefined })];
+    : [t(header ? String(content).toUpperCase() : content,
+        { bold: bold || header, color: header ? "FFFFFF" : undefined, size: 18 })];
   return new TableCell({
     borders, width: { size: w, type: WidthType.DXA }, margins: cellMargins,
     verticalAlign: VerticalAlign.CENTER,
     columnSpan: span,
     shading: fill ? { fill, type: ShadingType.CLEAR } : undefined,
-    children: [new Paragraph({ alignment: align, children: runs })],
+    children: [new Paragraph({ alignment: align, spacing: { before: 0, after: 0, line: 276 }, children: runs })],
   });
 }
 function table(colWidths, headerCells, rows, opts = {}) {
@@ -105,109 +142,176 @@ function table(colWidths, headerCells, rows, opts = {}) {
   return new Table({ width: { size: CW, type: WidthType.DXA }, columnWidths: colWidths, rows: [trHeader, ...trRows] });
 }
 
-// ---------- cabeçalho / rodapé (modelo DSTECH v.3) ----------
-// As faixas gráficas são as do modelo: sangram para fora da margem esquerda e ficam
-// atrás do texto. Offsets em EMU, iguais aos do arquivo original.
+// ---------- capa / cabeçalho / rodapé / contracapa (modelo DSTECH v.4) ----------
+// Mesma identidade do Modelo de Documento Padrão Sankhya 2026: capa e contracapa com
+// fundo institucional sangrando a página, cabeçalho DSTECH e rodapé com filete verde.
 const ASSETS = path.join(__dirname, "..", "assets");
 const EMU_PX = 9525;
-function faixa(file, wEmu, hEmu, xEmu, yEmu) {
-  return new ImageRun({
-    type: "png",
-    data: fs.readFileSync(path.join(ASSETS, file)),
-    transformation: { width: Math.round(wEmu / EMU_PX), height: Math.round(hEmu / EMU_PX) },
-    floating: {
-      horizontalPosition: { relative: HorizontalPositionRelativeFrom.COLUMN, offset: xEmu },
-      verticalPosition: { relative: VerticalPositionRelativeFrom.PARAGRAPH, offset: yEmu },
-      behindDocument: true,
-      wrap: { type: TextWrappingType.NONE },
-    },
+const PAGINA_EMU = { width: 7562850, height: 10696575 };
+const lerAsset = (nome) => fs.readFileSync(path.join(ASSETS, nome));
+
+function fundo(arquivo) {
+  return new Paragraph({
+    spacing: { before: 0, after: 0 },
+    children: [new ImageRun({
+      type: "jpg",
+      data: lerAsset(arquivo),
+      transformation: { width: Math.round(PAGINA_EMU.width / EMU_PX), height: Math.round(PAGINA_EMU.height / EMU_PX) },
+      floating: {
+        horizontalPosition: { relative: HorizontalPositionRelativeFrom.PAGE, offset: 0 },
+        verticalPosition: { relative: VerticalPositionRelativeFrom.PAGE, offset: 0 },
+        behindDocument: true,
+        wrap: { type: TextWrappingType.NONE },
+      },
+    })],
   });
 }
 
-function celulaCabecalho(runs, { w, span, align } = {}) {
-  const dotted = { style: BorderStyle.DOTTED, size: 4, color: "000000" };
+function linhaCapa(texto, { fina } = {}) {
+  return new Paragraph({
+    spacing: { before: 0, after: fina ? 0 : 280, line: 240 },
+    children: [t(texto.toUpperCase(), {
+      font: fina ? FONTE_FINA : FONTE_FORTE, size: 48, characterSpacing: fina ? 30 : 20,
+      color: fina ? GREEN : "FFFFFF",
+    })],
+  });
+}
+
+/** Busca na identificação o valor do primeiro rótulo presente (sem diferenciar caixa). */
+function valorIdentificacao(rotulos) {
+  const alvo = rotulos.map(r => r.toLowerCase());
+  const linha = (d.identificacao || []).find(r => alvo.includes(String(r[0]).toLowerCase()));
+  return linha ? String(linha[1]) : "";
+}
+
+function camposCapa() {
+  const cab = d.cabecalho || {};
+  const idDsTech = valorIdentificacao(["ID DSTech"]);
+  const campos = [
+    ...(idDsTech ? [["ID DSTech", idDsTech]] : []),
+    ["Cliente", valorIdentificacao(["Cliente"])],
+    ["Versão", cab.versao || "1.0"],
+    ["Data", valorIdentificacao(["Data", "Data da análise"])],
+    ["Responsável", valorIdentificacao(["Orçamento Realizado por", "Analista"]) || cab.elaborador || "João Coluci"],
+  ];
+  const w = Math.floor(CW / campos.length);
+  const topo = { style: BorderStyle.SINGLE, size: 8, color: GREEN };
+  return new Table({
+    width: { size: w * campos.length, type: WidthType.DXA }, columnWidths: campos.map(() => w),
+    rows: [new TableRow({
+      children: campos.map(([rot, val]) => new TableCell({
+        width: { size: w, type: WidthType.DXA },
+        borders: { top: topo, left: semBorda, bottom: semBorda, right: semBorda },
+        margins: { top: 120, bottom: 60, left: 0, right: 200 },
+        children: [
+          new Paragraph({ spacing: { after: 40 },
+            children: [t(rot.toUpperCase(), { font: FONTE_FORTE, color: GREEN, characterSpacing: 40, size: 14 })] }),
+          new Paragraph({ spacing: { after: 0 }, children: [t(val, { color: "FFFFFF", size: 18 })] }),
+        ],
+      })),
+    })],
+  });
+}
+
+/** Título da capa em duas linhas finas (verde) e o nome da demanda em destaque (branco). */
+function capa() {
+  const titulo = d.titulo || "Detalhamento do Orçamento de Horas";
+  const palavras = titulo.split(" ");
+  const meio = Math.ceil(palavras.length / 2);
+  const out = [fundo("capa-2026.jpg"),
+    linhaCapa(palavras.slice(0, meio).join(" "), { fina: true }),
+    linhaCapa(palavras.slice(meio).join(" "), { fina: true })];
+  if (d.subtitulo) out.push(linhaCapa(d.subtitulo));
+  out.push(new Paragraph({ spacing: { before: 3400, after: 0 }, children: [] }));
+  out.push(camposCapa());
+  return out;
+}
+
+function contracapa() {
+  const cab = d.cabecalho || {};
+  return [
+    fundo("contracapa-2026.jpg"),
+    linhaCapa("Obrigado.", { fina: true }),
+    linhaCapa("Dúvidas? Fale com a gente."),
+    new Paragraph({ spacing: { before: 600, after: 20 },
+      children: [t((cab.area || "Delivery Service Tech").toUpperCase(), { font: FONTE_FORTE, color: GREEN, characterSpacing: 40, size: 16 })] }),
+    new Paragraph({ spacing: { before: 4200 },
+      children: [new ImageRun({ type: "png", data: lerAsset("logo-sankhya-branco.png"), transformation: { width: 170, height: 37 } })] }),
+  ];
+}
+
+function celulaCabecalho(runs, { w, span, align, fill } = {}) {
   return new TableCell({
-    borders: { top: dotted, bottom: dotted, left: dotted, right: dotted },
-    width: { size: w, type: WidthType.DXA }, margins: { top: 100, bottom: 100, left: 100, right: 100 },
+    borders: { top: semBorda, left: semBorda, right: semBorda, bottom: { style: BorderStyle.SINGLE, size: 4, color: "E4E4E4" } },
+    width: { size: w, type: WidthType.DXA }, margins: { top: 50, bottom: 50, left: 110, right: 110 },
     columnSpan: span, verticalAlign: VerticalAlign.CENTER,
-    children: [new Paragraph({ alignment: align, spacing: { before: 0, after: 0 }, children: runs })],
+    shading: fill ? { fill, type: ShadingType.CLEAR } : undefined,
+    children: [new Paragraph({ alignment: align, spacing: { before: 0, after: 0, line: 240 }, children: runs })],
   });
 }
-function rotulo(txt) { return t(txt, { size: 16, color: LABEL }); }
+const rotulo = (txt) => t(txt.toUpperCase(), { font: FONTE_FORTE, size: 13, color: GREEN_APOIO, characterSpacing: 30 });
+const valor = (txt) => t(txt, { size: 15, color: NAVY });
 
+/** Tabela DSTECH: elaborador e aprovador do documento; versão e publicação do layout v.4. */
 function tabelaCabecalho() {
   const cab = d.cabecalho || {};
-  const cols = [1530, 3810, 1335, 1815];
-  const logo = new ImageRun({
-    type: "png",
-    data: fs.readFileSync(path.join(ASSETS, "logo-sankhya.png")),
-    transformation: { width: 59, height: 34 },
-  });
+  const cols = [1900, 3200, 1700, CW - 6800];
+  const logo = new ImageRun({ type: "png", data: lerAsset("logo-sankhya-2026.png"), transformation: { width: 80, height: 17 } });
   const linha = (a, b, c, e) => new TableRow({
     children: [
-      celulaCabecalho([rotulo(a)], { w: cols[0] }),
-      celulaCabecalho([rotulo(b)], { w: cols[1] }),
-      celulaCabecalho([rotulo(c)], { w: cols[2] }),
-      celulaCabecalho([rotulo(e)], { w: cols[3] }),
+      celulaCabecalho([rotulo(a)], { w: cols[0], fill: ZEBRA }),
+      celulaCabecalho([valor(b)], { w: cols[1] }),
+      celulaCabecalho([rotulo(c)], { w: cols[2], fill: ZEBRA }),
+      celulaCabecalho([valor(e)], { w: cols[3] }),
     ],
   });
   return new Table({
-    width: { size: 8490, type: WidthType.DXA }, columnWidths: cols,
+    width: { size: CW, type: WidthType.DXA }, columnWidths: cols,
     rows: [
       new TableRow({
         children: [
-          celulaCabecalho([logo], { w: cols[0], align: C }),
-          celulaCabecalho([t(cab.area || "Delivery Service Tech", { bold: true, size: 20, color: NAVY })],
-            { w: cols[1] + cols[2] + cols[3], span: 3, align: C }),
+          celulaCabecalho([logo], { w: cols[0] }),
+          celulaCabecalho([t((cab.area || "Delivery Service Tech").toUpperCase(),
+            { font: FONTE_FORTE, size: 16, color: NAVY, characterSpacing: 30 })],
+            { w: cols[1] + cols[2] + cols[3], span: 3, align: R }),
         ],
       }),
-      linha("Elaborador", cab.elaborador || "João Coluci", "Versão", cab.versao || "1.0"),
-      linha("Aprovador", cab.aprovador || "Plinio Silva", "Data Revisão", DATA_REVISAO_LAYOUT),
+      linha("Elaborador", cab.elaborador || "João Coluci", "Versão", VERSAO_LAYOUT),
+      linha("Aprovador", cab.aprovador || "Plinio Silva", "Publicação", DATA_PUBLICACAO_LAYOUT),
     ],
   });
 }
 
-const vazio = (n) => Array.from({ length: n }, () => new Paragraph({ spacing: { before: 0, after: 0 }, children: [t("", { size: 20 })] }));
-
 const cabecalhoPadrao = new Header({
-  children: [
-    new Paragraph({ spacing: { before: 0, after: 0 }, children: [faixa("cabecalho-padrao.png", 7479882, 414338, -1076322, 1)] }),
-    ...vazio(3),
-    tabelaCabecalho(),
-    new Paragraph({ spacing: { before: 0, after: 0 }, children: [] }),
-  ],
+  children: [tabelaCabecalho(), new Paragraph({ spacing: { before: 0, after: 0 }, children: [] })],
 });
-const cabecalhoCapa = new Header({
-  children: [new Paragraph({ spacing: { before: 0, after: 0 }, children: [faixa("cabecalho-capa.png", 7581900, 1185863, -1079998, 1)] })],
-});
+const vazioCabecalho = () => new Header({ children: [new Paragraph({ children: [] })] });
+const vazioRodape = () => new Footer({ children: [new Paragraph({ children: [] })] });
 const rodapePadrao = new Footer({
   children: [new Paragraph({
-    alignment: R,
+    border: { top: { style: BorderStyle.SINGLE, size: 12, color: GREEN, space: 8 } },
+    tabStops: [{ type: TabStopType.RIGHT, position: CW }],
     children: [
-      new TextRun({ children: [PageNumber.CURRENT], size: 16, color: LABEL }),
-      faixa("rodape-padrao.png", 7572375, 658544, -1076322, 1),
+      t("SANKHYA  ", { font: FONTE_FORTE, size: 14, color: NAVY, characterSpacing: 30 }),
+      t("|  Documento de uso interno e do cliente", { size: 14, color: LABEL }),
+      new TextRun({ children: ["\tPÁGINA ", PageNumber.CURRENT, " DE ", PageNumber.TOTAL_PAGES], size: 14, color: LABEL, characterSpacing: 20 }),
     ],
   })],
 });
-const rodapeCapa = new Footer({
-  children: [new Paragraph({ children: [faixa("rodape-capa.png", 7581900, 855931, -1076322, -126760)] })],
-});
+
+// Fontes embutidas: sem elas o Word troca Work Sans por Calibri em máquina sem a fonte.
+const FONTES_EMBUTIDAS = [
+  { name: FONTE, data: lerAsset("fontes/WorkSans.ttf") },
+  { name: FONTE_FORTE, data: lerAsset("fontes/WorkSansSemiBold.ttf") },
+  { name: FONTE_FINA, data: lerAsset("fontes/WorkSansLight.ttf") },
+];
 
 // ---------- montagem ----------
 const children = [];
 
-// Título
-children.push(new Paragraph({ alignment: C, spacing: { after: 60 },
-  children: [t(d.titulo || "Detalhamento do Orçamento de Horas", { bold: true, size: 40, color: NAVY })] }));
-if (d.subtitulo) {
-  children.push(new Paragraph({ alignment: C, spacing: { after: 240 },
-    border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: GREEN, space: 4 } },
-    children: [t(d.subtitulo, { bold: true, size: 26, color: NAVY })] }));
-}
-
 // Identificação
 if (d.identificacao?.length) {
-  children.push(table([2600, 5906], ["Campo", "Valor"],
+  children.push(table([escala(2600), CW - escala(2600)], ["Campo", "Valor"],
     d.identificacao.map(r => [r[0], r[1]]), { boldCols: [0] }));
   children.push(p("", { spacing: { after: 120 } }));
 }
@@ -218,7 +322,7 @@ if (d.resumo) {
   if (d.resumo.intro) children.push(p(d.resumo.intro));
   if (d.resumo.rotinas?.length) {
     children.push(linhaVazia());
-    children.push(table([2400, 6106], ["Rotina", "Descrição"],
+    children.push(table([escala(2400), CW - escala(2400)], ["Rotina", "Descrição"],
       d.resumo.rotinas.map(r => [r[0], r[1]]), { boldCols: [0] }));
     children.push(linhaVazia());
   }
@@ -228,10 +332,12 @@ if (d.resumo) {
 const observacoes = [].concat(d.observacoes || d.observacao || []);
 observacoes.forEach((obs, i) => {
   if (i > 0) children.push(linhaVazia());
-  children.push(new Paragraph({ spacing: { before: 160, after: 160 },
+  // Caixa de nota do padrão 2026: rótulo em caixa alta verde, texto em slate, barra verde.
+  children.push(new Paragraph({ spacing: { before: 160, after: 160, line: 320 },
     shading: { fill: ZEBRA, type: ShadingType.CLEAR },
-    border: { left: { style: BorderStyle.SINGLE, size: 12, color: GREEN, space: 8 } },
-    children: [t((obs.titulo || "Observação") + ": ", { bold: true, color: NAVY }), t(obs.texto || obs)] }));
+    border: { left: { style: BorderStyle.SINGLE, size: 36, color: GREEN, space: 12 } },
+    children: [t((obs.titulo || "Observação").toUpperCase() + "  ", { bold: true, color: GREEN_APOIO, characterSpacing: 30 }),
+      t(obs.texto || obs, { color: SLATE })] }));
 });
 
 // Quadro — tabela descritiva sem horas. Serve para expor a composição de um anexo
@@ -241,7 +347,7 @@ function quadro(q) {
   if (q.intro) out.push(p(q.intro));
   out.push(linhaVazia());
   const ncols = q.colunas.length;
-  const larguras = q.larguras || Array(ncols).fill(Math.floor(CW / ncols));
+  const larguras = q.larguras ? q.larguras.map(escala) : Array(ncols).fill(Math.floor(CW / ncols));
   larguras[ncols - 1] += CW - larguras.reduce((a, b) => a + b, 0);
   out.push(table(larguras, q.colunas, q.linhas, { boldCols: [0] }));
   out.push(linhaVazia());
@@ -269,14 +375,14 @@ for (const e of (d.escopos || [])) {
   }
   children.push(p("", { spacing: { after: 60 } }));
   if (e.subtotalDev) {
-    children.push(table([6106, 2400], [e.subtotalDevLabel || "Subtotal Desenvolvimento", e.subtotalDev], [], { aligns: [null, R] }));
+    children.push(table([CW - escala(2400), escala(2400)], [e.subtotalDevLabel || "Subtotal Desenvolvimento", e.subtotalDev], [], { aligns: [null, R] }));
   }
 
   quadros.filter(q => q.posicao !== "antes").forEach(q => children.push(...quadro(q)));
 
   if (e.fases?.length) {
     children.push(h2(e.tituloFases || "Demais fases"));
-    children.push(table([6106, 2400], ["Fase", "Horas"], e.fases.map(f => [f[0], f[1]]), { aligns: [null, R] }));
+    children.push(table([CW - escala(2400), escala(2400)], ["Fase", "Horas"], e.fases.map(f => [f[0], f[1]]), { aligns: [null, R] }));
   }
   if (e.total) {
     children.push(new Paragraph({ spacing: { before: 160 },
@@ -299,7 +405,7 @@ if (d.consolidado) {
   const cons = d.consolidado;
   children.push(h1pb(cons.titulo || "Resumo consolidado"));
   const ncols = cons.colunas.length;
-  const first = 3406;
+  const first = escala(3406);
   const rest = Math.floor((CW - first) / (ncols - 1));
   const widths = [first, ...Array(ncols - 1).fill(rest)];
   // ajuste de arredondamento na última coluna
@@ -310,7 +416,7 @@ if (d.consolidado) {
   if (cons.totalGeral) {
     children.push(new Paragraph({ alignment: C, spacing: { before: 220, after: 220 },
       shading: { fill: ZEBRA, type: ShadingType.CLEAR },
-      border: { left: { style: BorderStyle.SINGLE, size: 12, color: GREEN, space: 8 } },
+      border: { left: { style: BorderStyle.SINGLE, size: 36, color: GREEN, space: 12 } },
       children: [t(cons.totalGeral, { bold: true, size: 28, color: NAVY })] }));
   }
 }
@@ -340,36 +446,59 @@ if (d.premissas) {
 }
 
 // ---------- documento ----------
+// Estilos do Modelo de Documento Padrão Sankhya 2026: Work Sans 10,5pt navy; H1 SemiBold em
+// caixa alta 17pt; H2 12,5pt; H3 10,5pt slate.
 const doc = new Document({
+  fonts: FONTES_EMBUTIDAS,
   styles: {
-    default: { document: { run: { font: "Arial", size: 22, color: TEXT } } },
+    default: { document: {
+      run: { font: FONTE, size: 21, color: TEXT },
+      paragraph: { spacing: { after: 140, line: 312 } },
+    } },
     paragraphStyles: [
       { id: "Heading1", name: "Heading 1", basedOn: "Normal", next: "Normal", quickFormat: true,
-        run: { size: 28, bold: true, color: NAVY, font: "Arial" },
-        paragraph: { spacing: { before: 240, after: 120 }, outlineLevel: 0 } },
+        run: { size: 34, font: FONTE_FORTE, allCaps: true, color: NAVY, characterSpacing: 20 },
+        paragraph: { keepNext: true, spacing: { before: 520, after: 220 }, outlineLevel: 0 } },
       { id: "Heading2", name: "Heading 2", basedOn: "Normal", next: "Normal", quickFormat: true,
-        run: { size: 24, bold: true, color: NAVY, font: "Arial" },
-        paragraph: { spacing: { before: 180, after: 80 }, outlineLevel: 1 } },
+        run: { size: 25, font: FONTE_FORTE, color: NAVY },
+        paragraph: { keepNext: true, spacing: { before: 320, after: 140 }, outlineLevel: 1 } },
       { id: "Heading3", name: "Heading 3", basedOn: "Normal", next: "Normal", quickFormat: true,
-        run: { size: 22, bold: true, color: NAVY, font: "Arial" },
-        paragraph: { spacing: { before: 240, after: 40 }, outlineLevel: 2 } },
+        run: { size: 21, font: FONTE_FORTE, color: SLATE },
+        paragraph: { keepNext: true, spacing: { before: 240, after: 100 }, outlineLevel: 2 } },
     ],
   },
   numbering: {
     config: [
-      { reference: "b", levels: [{ level: 0, format: LevelFormat.BULLET, text: "•", alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 620, hanging: 320 } } } }] },
-      { reference: "n", levels: [{ level: 0, format: LevelFormat.DECIMAL, text: "%1.", alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 620, hanging: 320 } } } }] },
+      { reference: "b", levels: [{ level: 0, format: LevelFormat.BULLET, text: "■", alignment: AlignmentType.LEFT,
+        style: { run: { color: GREEN_APOIO, size: 14 }, paragraph: { indent: { left: 540, hanging: 300 } } } }] },
+      { reference: "n", levels: [{ level: 0, format: LevelFormat.DECIMAL, text: "%1.", alignment: AlignmentType.LEFT,
+        style: { run: { font: FONTE_FORTE, color: GREEN_APOIO }, paragraph: { indent: { left: 540, hanging: 360 } } } }] },
     ],
   },
-  sections: [{
-    properties: { titlePage: true, page: { size: PAGE, margin: MARGIN } },
-    headers: { default: cabecalhoPadrao, first: cabecalhoCapa },
-    footers: { default: rodapePadrao, first: rodapeCapa },
-    children,
-  }],
+  sections: [
+    { properties: { page: { size: PAGE, margin: MARGIN_CAPA } },
+      headers: { default: vazioCabecalho() }, footers: { default: vazioRodape() }, children: capa() },
+    { properties: { page: { size: PAGE, margin: MARGIN } },
+      headers: { default: cabecalhoPadrao }, footers: { default: rodapePadrao }, children },
+    { properties: { page: { size: PAGE, margin: MARGIN_CONTRACAPA } },
+      headers: { default: vazioCabecalho() }, footers: { default: vazioRodape() }, children: contracapa() },
+  ],
 });
 
-Packer.toBuffer(doc).then(buf => {
+// O pacote docx grava o fontKey das fontes embutidas em minúsculas, mas o schema OOXML
+// exige GUID em hexadecimal maiúsculo. A desofuscação da fonte não depende da caixa.
+async function corrigirFontKeys(buf) {
+  const JSZip = require(require.resolve("jszip", { paths: [path.dirname(require.resolve("docx"))] }));
+  const zip = await JSZip.loadAsync(buf);
+  const arquivoFontes = zip.file("word/fontTable.xml");
+  if (!arquivoFontes) return buf;
+  const xml = await arquivoFontes.async("string");
+  zip.file("word/fontTable.xml", xml.replace(/fontKey="(\{[0-9a-fA-F-]+\})"/g,
+    (_, guid) => `fontKey="${guid.toUpperCase()}"`));
+  return zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
+}
+
+Packer.toBuffer(doc).then(corrigirFontKeys).then(buf => {
   fs.writeFileSync(outputPath, buf);
   console.log("OK " + outputPath);
 });

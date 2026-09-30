@@ -1,8 +1,8 @@
 ---
 name: orcamento-horas-docx
 description: >
-  Gera o DOCX "Detalhamento do Orçamento de Horas" no padrão Sankhya (cabeçalho/rodapé DSTECH
-  v.3, paleta do Brandbook 2023, bloco único com itens agrupados por assunto e horas cravadas,
+  Gera o DOCX "Detalhamento do Orçamento de Horas" no padrão Sankhya (modelo DSTECH
+  v.4 sobre o Modelo de Documento Padrão Sankhya 2026: capa, cabeçalho, rodapé e contracapa; bloco único com itens agrupados por assunto e horas cravadas,
   fases, consolidado, pontos a definir, escopo negativo e premissas). Acionar para "orçamento de horas",
   "estimativa de horas em Word", "orçamento Sankhya", "proposta de horas", ou logo após a
   sankhya-estimativa-planejador calcular as horas. Só renderiza — o cálculo é da skill de
@@ -11,7 +11,7 @@ description: >
 
 # Detalhamento do Orçamento de Horas em DOCX
 
-Renderiza o orçamento no layout acordado: cabeçalho e rodapé do **modelo DSTECH v.3**, cores e tipografia do **Brandbook Sankhya 2023**. Não recriar estilos ad hoc — usar o gerador.
+Renderiza o orçamento no layout acordado: **modelo DSTECH v.4** (capa, cabeçalho, rodapé e contracapa) com cores e tipografia do **Modelo de Documento Padrão Sankhya 2026**. Não recriar estilos ad hoc — usar o gerador.
 
 O cálculo das horas é responsabilidade da `sankhya-estimativa-planejador`; esta skill só renderiza o resultado.
 
@@ -70,11 +70,11 @@ Lista exata de campos que passam e que não passam: `references/schema-orcamento
 
 ## Padrão visual
 
-Paleta e tipografia já fixadas nas constantes do gerador — **não sobrescrever por documento**. Petróleo `#2E3C50` em título/H1/H2/horas/totais; verde `#66CC66` só como filete e barra lateral (nunca texto: contraste 2,2:1 reprova WCAG AA e some na impressão P&B); zebra `#EDEDED`; Arial em vez de Work Sans/Roboto (fonte não padrão do Office é substituída sem avisar na máquina do cliente e desloca as quebras).
+Paleta e tipografia já fixadas nas constantes do gerador — **não sobrescrever por documento**. Navy `#212F41` em texto/títulos/horas/totais; verde `#00D666` só como filete, barra e texto sobre fundo escuro (contraste 1,9:1 no branco); verde apoio `#00CD5E` em rótulos e marcadores; zebra `#F3F3F3`; **Work Sans embutida** no DOCX (`assets/fontes`), ênfase em Work Sans SemiBold em vez de negrito.
 
-A4, margens DSTECH, estrutura das faixas de cabeçalho/rodapé, offsets em EMU e escala tipográfica: `references/design-sankhya.md`.
+A4, três seções (capa, corpo, contracapa), margens, tabela de cabeçalho e escala tipográfica: `references/design-sankhya.md`.
 
-Duas tabelas distintas, não fundir: o bloco `cabecalho` do JSON descreve o **documento** (Elaborador/Versão/Aprovador, defaults `João Coluci` e `1.0`; "Data Revisão" é a revisão do layout DSTECH, fixa em `03/07/2026` no gerador — nunca a data do orçamento); a tabela de identificação do corpo descreve a **demanda** (ID DSTech, cliente, consultor). Primeira página sem paginação.
+Duas tabelas distintas, não fundir: o bloco `cabecalho` do JSON descreve o **documento** (Elaborador/Aprovador, defaults `João Coluci` e `Plinio Silva`). No cabeçalho, **Versão 4.0** e **Publicação 30/09/2026** são do layout DSTECH v.4, fixas no gerador — nunca a versão ou a data do orçamento; `cabecalho.versao` (default `1.0`) vai para a capa. A tabela de identificação do corpo descreve a **demanda** (ID DSTech, cliente, consultor). Capa e contracapa sem cabeçalho e rodapé.
 
 ## Fluxo
 
@@ -89,8 +89,12 @@ npm ls -g docx || npm install -g docx
 export NODE_PATH="$(npm root -g)"
 node "$HOME/.claude/skills/orcamento-horas-docx/scripts/gerar-orcamento-docx.js" \
   --content /caminho/dados.json \
-  --output "/caminho/Orcamento Nome da Demanda.docx"
+  --output-dir "/caminho/da/pasta/da/DS"
 ```
+
+**Nome do arquivo padronizado:** `ORCAMENTO - ID DSTECH <id> - <CLIENTE>.docx` (ex.: `ORCAMENTO - ID DSTECH 3457 - NEXXERA.docx`). O gerador monta o nome a partir de `ID DSTech` e `Cliente` da `identificacao` (maiúsculas, sem acento e sem caractere inválido) — usar sempre `--output-dir`. `--output` com nome livre existe só para teste. Documento antigo com outro nome na pasta da DS: substituir pelo novo, não deixar os dois.
+
+**Capa:** mostra `ID DSTech`, Cliente, Versão, Data e Responsável. O ID vem da `identificacao`; sem ele, o campo some da capa.
 
 5. Validar (forçar UTF-8; o validador quebra com cp1252 no Windows):
 
@@ -109,6 +113,6 @@ Esperado: `All validations PASSED!`.
 
 ## Recursos
 
-`scripts/gerar-orcamento-docx.js` gerador · `references/schema-orcamento.md` schema do JSON + campos do humanizer · `references/design-sankhya.md` paleta, tipografia, cabeçalho/rodapé · `assets/` faixas e logo do modelo DSTECH v.3 · `examples/orcamento-exemplo.json` modelo genérico.
+`scripts/gerar-orcamento-docx.js` gerador · `references/schema-orcamento.md` schema do JSON + campos do humanizer · `references/design-sankhya.md` paleta, tipografia, cabeçalho/rodapé · `assets/` fundos de capa/contracapa, logos e fontes Work Sans do modelo DSTECH v.4 · `examples/orcamento-exemplo.json` modelo genérico.
 
-Fontes do padrão: Brandbook em `G:\Drives compartilhados\Sankhya Marketing\01. GUIDES\` · modelo DSTECH em `G:\Drives compartilhados\Delivery Service - Tech\6. GESTAO\DSTECH 2.0\Novos Modelos de Documento\`.
+Fontes do padrão: `Modelo de Documento Padrão Sankhya 2026.docx` e modelos DSTECH v.4 em `G:\Drives compartilhados\Delivery Service - Tech\A. ESTRUTURA SITE\1. MODELO DE DOCUMENTOS\`.
