@@ -92,7 +92,7 @@ node "$HOME/.claude/skills/orcamento-horas-docx/scripts/gerar-orcamento-docx.js"
   --output-dir "/caminho/da/pasta/da/DS"
 ```
 
-**Nome do arquivo padronizado:** `ORCAMENTO - ID DSTECH <id> - <CLIENTE>.docx` (ex.: `ORCAMENTO - ID DSTECH 3457 - NEXXERA.docx`). O gerador monta o nome a partir de `ID DSTech` e `Cliente` da `identificacao` (maiúsculas, sem acento e sem caractere inválido) — usar sempre `--output-dir`. `--output` com nome livre existe só para teste. Documento antigo com outro nome na pasta da DS: substituir pelo novo, não deixar os dois.
+**Nome do arquivo padronizado:** `ORCAMENTO - ID DSTECH <id> - <CLIENTE>.docx` (ex.: `ORCAMENTO - ID DSTECH 3457 - NEXXERA.docx`). O gerador monta o nome a partir da `identificacao`: `ID DSTech` entra **exatamente como está** (sem zero à esquerda, sem formatação — `3457` vira `3457`); `Cliente` entra em maiúsculas, sem acento e sem caractere inválido no Windows (`< > : " / \ | ? *`). Falta de qualquer um dos dois faz o gerador parar com erro. Usar sempre `--output-dir`. `--output` com nome livre existe só para teste. Documento antigo com outro nome na pasta da DS: substituir pelo novo, não deixar os dois.
 
 **Capa:** mostra `ID DSTech`, Cliente, Versão, Data e Responsável. O ID vem da `identificacao`; sem ele, o campo some da capa.
 
@@ -109,6 +109,7 @@ Esperado: `All validations PASSED!`.
 
 - DOCX **aberto no Word** → gravação falha com `EBUSY`; pedir para fechar e regerar.
 - Ao mexer nas imagens do cabeçalho/rodapé, todo `ImageRun` precisa de `type: "png"`. Sem isso o Word abre com **"arquivo corrompido"** e o `validate.py` **passa mesmo assim** — não confiar nele para esse caso.
+- O pacote `docx` grava o `fontKey` das fontes embutidas em minúsculas e o `validate.py` reprova. O gerador corrige isso sozinho antes de gravar (`corrigirFontKeys`, via o `jszip` que vem com o `docx`) — não remover.
 - Não guardar dado real de cliente na skill; `examples/` é genérico.
 
 ## Recursos

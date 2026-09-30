@@ -35,7 +35,7 @@ const raw = fs.readFileSync(contentPath, "utf8").replace(/^\s*\/\*[\s\S]*?\*\/\s
 const d = JSON.parse(raw);
 const outputPath = outputDir ? path.join(outputDir, nomeArquivoPadrao()) : arg("--output");
 
-/** Nome padrão: "ORCAMENTO - ID DSTECH <id> - <CLIENTE>.docx", sem acento e sem caractere inválido no Windows. */
+/** Nome padrão: "ORCAMENTO - ID DSTECH <id> - <CLIENTE>.docx". ID exato; cliente sem acento e sem caractere inválido no Windows. */
 function nomeArquivoPadrao() {
   const valor = (rotulo) => {
     const linha = (d.identificacao || []).find(r => String(r[0]).toLowerCase() === rotulo.toLowerCase());
@@ -49,7 +49,7 @@ function nomeArquivoPadrao() {
   }
   const limpar = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "")
     .replace(/[<>:"/\\|?*]/g, "").replace(/\s+/g, " ").trim().toUpperCase();
-  return `ORCAMENTO - ID DSTECH ${limpar(id)} - ${limpar(cliente)}.docx`;
+  return `ORCAMENTO - ID DSTECH ${id} - ${limpar(cliente)}.docx`;
 }
 
 // ---------- paleta / medidas ----------
